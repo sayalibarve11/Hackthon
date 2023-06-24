@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Snake Game</title>
+  <style>
+    #game-container {
+      width: 400px;
+      height: 400px;
+      position: relative;
+      border: 1px solid #000;
+    }
+
+    .game-cell {
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      background-color: #000;
+    }
+
+    #food {
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      background-color: #f00;
+    }
+
+    #score {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+  <div id="score">Score: 0</div>
+
+  <script>
+    // Game container
+    const gameContainer = document.getElementById('game-container');
+    const containerWidth = gameContainer.offsetWidth;
+    const containerHeight = gameContainer.offsetHeight;
+
+    // Game settings
+    const cellSize = 20;
+    const totalCells = (containerWidth / cellSize) * (containerHeight / cellSize);
+    const initialSnakeLength = 5;
+    const snakeSpeed = 200; // in milliseconds
+
+    // Game variables
+    let snake;
+    let food;
+    let direction;
+    let gameLoop;
+    let score = 0;
+
+    // Initialize the game
+    const initializeGame = () => {
+      snake = [{ x: 0, y: 0 }];
+      direction = 'right';
+
+      createSnake();
+      generateFood();
+
+      gameLoop = setInterval(moveSnake, snakeSpeed);
+
+      document.addEventListener('keydown', changeDirection);
+    };
+
+    // Create the snake
+    const createSnake = () => {
+      for (let i = 0; i < snake.length; i++) {
+        const snakePart = document.createElement('div');
+        snakePart.className = 'game-cell';
+        snakePart.style.left = snake[i].x * cellSize + 'px';
+        snakePart.style.top = snake[i].y * cellSize + 'px';
+        gameContainer.appendChild(snakePart);
+      }
+    };
+
+    // Generate food at random position
+    const generateFood = () => {
+      const foodX = Math.floor(Math.random() * (containerWidth / cellSize));
+      const foodY = Math.floor(Math.random() * (containerHeight / cellSize));
+
+      food = document.createElement('div');
+      food.id = 'food';
+      food.style.left = foodX * cellSize + 'px';
+      food.style.top = foodY * cellSize + 'px';
+      gameContainer.appendChild(food);
+    };
+
+    // Move the snake
+    const moveSnake = () => {
+      const head = { x: snake[0].x, y: snake[0].y };
+
+      switch (direction) {
+        case 'right':
+          head.x++;
+          break;
+        case 'left':
+          head.x--;
+          break;
+        case 'up':
+          head.y--;
+          break;
+        case 'down':
+          head.y++;
+          break;
+      }
+
+      snake.unshift(head);
+
+      if (isCollidingWithFood()) {
+        gameContainer.removeChild(food);
+        generateFood();
+        score += 10;
+        document.getElementById('score').textContent = 'Score: ' + score;
+      } else {
+        snake.pop();
+      }
+
+      if (isCollidingWithWall() || isCollidingWithSelf()) {
+        clearInterval(gameLoop);
+        alert('Game Over');
+        document.location.reload();
+      }
+
+      updateSnake();
+    };
+
+    // Update the snake's position on the game board
+    const updateSnake = () => {
+      const snakeParts = document.getElementsByClassName('game-cell');
+      for (let i = 0; i < snakeParts.length; i++) {
+        const part = snakeParts[i];
+        part.style.left = snake[i].x * cellSize + 'px';
+        part.style.top = snake[i].y * cellSize + 'px';
+      }
+    };
+
+    // Change snake's direction based on key input
+    const changeDirection = (event) => {
+      const key = event.keyCode;
+      const isArrowKey =
+        key === 37 || key === 38 || key === 39 || key === 40;
+
+      if (isArrowKey) {
+        event.preventDefault();
+
+        switch (key) {
+          case 37:
+            if (direction !== 'right') {
+              direction = 'left';
+            }
+            break;
+          case 38:
+            if (direction !== 'down') {
+              direction = 'up';
+            }
+            break;
+          case 39:
+            if (direction !== 'left') {
+              direction = 'right';
+            }
+            break;
+          case 40:
+            if (direction !== 'up') {
+              direction = 'down';
+            }
+            break;
+        }
+      }
+    };
+
+    // Check if the snake collides with the food
+    const isCollidingWithFood = () => {
+      return (
+        snake[0].x === parseInt(food.style.left) / cellSize &&
+        snake[0].y === parseInt(food.style.top) / cellSize
+      );
+    };
+
+    // Check if the snake collides with the wall
+    const isCollidingWithWall = () => {
+      const head = snake[0];
+      return (
+        head.x < 0 ||
+        head.x >= containerWidth / cellSize ||
+        head.y < 0 ||
+        head.y >= containerHeight / cellSize
+      );
+    };
+
+    // Check if the snake collides with itself
+    const isCollidingWithSelf = () => {
+      const head = snake[0];
+      for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    // Start the game
+    initializeGame();
+  </script>
+</body>
+</html>
